@@ -584,6 +584,51 @@ async def get_transaction_categories() -> list[dict]:
         logger.error(f"Error fetching Monarch transaction categories: {e}", exc_info=True)
         return [{"error": f"An error occurred while fetching transaction categories: {e}"}]
 
+@mcp.tool()
+async def get_transaction_category_groups() -> list[dict]:
+    """
+    Retrieves all transaction category groups configured in the Monarch Money account.
+    Corresponds to the get_transaction_category_groups method in the hammem/monarchmoney library.
+    Returns:
+        A list of category group dictionaries or an error dictionary.
+    """
+    # --- Monarch Money Client & Login ---
+    if not MONARCH_EMAIL or not MONARCH_PASSWORD:
+        logger.error("Cannot proceed: Email or password not configured in .env.")
+        return [{"error": "Monarch Money email or password not configured on the server."}]
+
+    mm_client = MonarchMoney()
+    logger.info(f"Attempting to log in to Monarch Money for get_transaction_category_groups...")
+    try:
+        await mm_client.login(
+            email=MONARCH_EMAIL,
+            password=MONARCH_PASSWORD,
+            mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False,
+            use_saved_session=False
+        )
+        logger.info("Monarch Money login successful for get_transaction_category_groups.")
+    except RequireMFAException:
+        logger.error("Monarch Money login failed: MFA required.")
+        return [{"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}]
+    except Exception as e:
+        logger.error(f"Monarch Money login failed: {e}")
+        return [{"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}]
+
+    # --- Fetch Transaction Category Groups ---
+    logger.info(f"Fetching Monarch Money transaction category groups...")
+    try:
+        # Call the library function
+        result_data = await mm_client.get_transaction_category_groups()
+        logger.info(f"Successfully fetched transaction category groups data. Type: {type(result_data)}")
+        # Extract the list of groups from the response, likely under 'categoryGroups' key based on reference.py query
+        groups_list = result_data.get('categoryGroups', [])
+        logger.info(f"Successfully extracted {len(groups_list)} transaction category groups.")
+        return groups_list
+    except Exception as e:
+        logger.error(f"Error fetching Monarch transaction category groups: {e}", exc_info=True)
+        return [{"error": f"An error occurred while fetching transaction category groups: {e}"}]
+
 # Add more tools here later...
 # e.g.
 # @mcp.tool()
