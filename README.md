@@ -53,7 +53,11 @@ MONARCH_MFA_SECRET=your_mfa_totp_secret_key
 
 ## Running the Server
 
-1.  **Create `mcp.json`:** Create a file named `mcp.json` in the `.cursor` folder. **Make sure to replace the absolute path to `main.py` with the correct path on your system.**
+There are two ways to configure your IDE (like Cursor or Claude Desktop) to use this MCP tool:
+
+### Option 1: Manual Configuration (Cursor)
+
+1.  **Create `mcp.json`:** Create a file named `mcp.json` in the `.cursor` folder within your workspace. **Make sure to replace the absolute path to `main.py` with the correct path on your system.**
 
     ```json
     {
@@ -66,12 +70,22 @@ MONARCH_MFA_SECRET=your_mfa_totp_secret_key
             "mcp[cli]",
             "mcp",
             "run",
-            "C:\\example\\path\\to\\project\\main.py"
+            "C:\\\\example\\\\path\\\\to\\\\project\\\\main.py"
           ]
         }
       }
     }
     ```
+
+### Option 2: Automatic Installation (Claude Desktop / MCP CLI)
+
+If you have the MCP CLI installed, you can automatically configure the tool by running the following command in the root directory of this project:
+
+```bash
+mcp install main.py
+```
+
+This command will typically handle the creation or modification of the necessary configuration files for you.
 
 ## Dependencies
 
