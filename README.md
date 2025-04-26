@@ -6,21 +6,24 @@ A server application built with FastMCP to expose tools for interacting with a M
 
 This server provides the following tools that can be called via the MCP protocol:
 
-- `get_accounts`: Retrieves a list of all accounts linked to Monarch Money.
-- `get_account_holdings`: Retrieves all securities (holdings) in a brokerage or similar type of account.
-- `get_account_type_options`: Retrieves all account types and their subtypes available in Monarch Money.
-- `get_account_history`: Retrieves the daily account history for a specified account.
-- `get_institutions`: Retrieves institutions linked to Monarch Money.
-- `get_budgets`: Retrieves all budgets and corresponding actual amounts.
-- `get_recurring_transactions`: Retrieves future recurring transactions, including merchant and account details.
-- `get_transactions_summary`: Retrieves the transaction summary data from the transactions page.
-- `get_transactions`: Retrieves transaction data, defaults to the last 100 transactions, and can be filtered by date range.
-- `get_transaction_categories`: Retrieves all categories configured in the account.
-- `get_transaction_category_groups`: Retrieves all category groups configured in the account.
-- `get_cashflow`: Retrieves cashflow data (by category, category group, merchant, and summary).
-- `get_cashflow_summary`: Retrieves the cash flow summary (income, expense, savings rate).
-
-_(More tools can be added by extending `main.py`)_
+[X] `get_accounts` — gets all the accounts linked to Monarch Money
+[X] `get_account_holdings` — gets all of the securities in a brokerage or similar type of account
+[X] `get_account_type_options` — all account types and their subtypes available in Monarch Money
+[X] `get_account_history` — gets all daily account history for the specified account
+[X] `get_institutions` — gets institutions linked to Monarch Money
+[X] `get_budgets` — all the budgets and the corresponding actual amounts
+[ ] `get_subscription_details` — gets the Monarch Money account's status (e.g., paid or trial)
+[X] `get_recurring_transactions` — gets the future recurring transactions, including merchant and account details
+[X] `get_transactions_summary` — gets the transaction summary data from the transactions page
+[X] `get_transactions` — gets transaction data, defaults to returning the last 100 transactions; can also be searched by date range
+[X] `get_transaction_categories` — gets all of the categories configured in the account
+[X] `get_transaction_category_groups` — all category groups configured in the account
+[ ] `get_transaction_details` — gets detailed transaction data for a single transaction
+[ ] `get_transaction_splits` — gets transaction splits for a single transaction
+[ ] `get_transaction_tags` — gets all of the tags configured in the account
+[X] `get_cashflow` — gets cashflow data (by category, category group, merchant, and a summary)
+[X] `get_cashflow_summary` — gets cashflow summary (income, expense, savings, savings rate)
+[ ] `is_accounts_refresh_complete` — gets the status of a running account refresh
 
 ## Setup
 
@@ -84,8 +87,6 @@ If you have the MCP CLI installed, you can automatically configure the tool by r
 ```bash
 mcp install main.py
 ```
-
-This command will typically handle the creation or modification of the necessary configuration files for you.
 
 ## Dependencies
 
