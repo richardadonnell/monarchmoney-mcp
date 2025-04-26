@@ -37,10 +37,10 @@ _(More tools can be added by extending `main.py`)_
 This server requires credentials to access your Monarch Money account. Create a `.env` file in the project root directory with the following variables:
 
 ```dotenv
-MONARCH_EMAIL="your_email@example.com"
-MONARCH_PASSWORD="your_monarch_password"
+MONARCH_EMAIL=your_email@example.com
+MONARCH_PASSWORD=your_monarch_password
 # Optional: Only required if your account uses MFA/TOTP
-# MONARCH_MFA_SECRET="your_mfa_totp_secret_key"
+# MONARCH_MFA_SECRET=your_mfa_totp_secret_key
 ```
 
 - Replace the placeholder values with your actual Monarch Money email and password.
