@@ -5,7 +5,7 @@ alwaysApply: false
 ---
 !!! ALWAYS CHECK THE DOCS *BEFORE* MAKING ANY CHANGES TO THE CODE !!!
 
-https://github.com/hammem/monarchmoney
+@https://github.com/hammem/monarchmoney
 
 or check the `reference.py` file for more info!!!
 

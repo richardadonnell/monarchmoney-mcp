@@ -23,5 +23,7 @@ The server uses `mcp.server.fastmcp.FastMCP` to define tools (e.g., `get_account
 
 When making changes to the `main.py` file, please reference the `reference.py` file for the correct syntax.
 
-Monarch Money Python Library: https://github.com/hammem/monarchmoney
+Monarch Money Python Library: @https://github.com/hammem/monarchmoney
+
+
 
