@@ -23,10 +23,11 @@ MONARCH_MFA_SECRET = os.getenv("MONARCH_MFA_SECRET") # Optional
 mcp = FastMCP("MonarchMoneyTool", description="MCP Tool to interact with Monarch Money.")
 
 # --- Tools ---
-@mcp.tool()
-async def get_monarch_accounts() -> list[dict]:
+@mcp.tool(name="get_accounts")
+async def get_accounts() -> list[dict]:
     """
     Retrieves a list of all accounts linked to the configured Monarch Money account.
+    Corresponds to the get_accounts method in the hammem/monarchmoney library.
     Returns a list of account dictionaries or an error dictionary.
     """
     # --- Monarch Money Client & Login (Encapsulated within the tool) ---
@@ -290,6 +291,46 @@ async def get_transactions_summary() -> dict:
     except Exception as e:
         logger.error(f"Error fetching Monarch transactions summary: {e}")
         return {"error": f"An error occurred while fetching the transactions summary: {e}"}
+
+@mcp.tool()
+async def get_account_type_options() -> dict:
+    """
+    Retrieves all account types and their subtypes available in Monarch Money.
+    Corresponds to the get_account_type_options method in the hammem/monarchmoney library.
+    Returns:
+        A dictionary containing account types and subtypes or an error dictionary.
+    """
+    # --- Monarch Money Client & Login ---
+    if not MONARCH_EMAIL or not MONARCH_PASSWORD:
+        logger.error("Cannot proceed: Email or password not configured in .env.")
+        return {"error": "Monarch Money email or password not configured on the server."}
+
+    mm_client = MonarchMoney()
+    logger.info(f"Attempting to log in to Monarch Money for get_account_type_options...")
+    try:
+        await mm_client.login(
+            email=MONARCH_EMAIL,
+            password=MONARCH_PASSWORD,
+            mfa_secret_key=MONARCH_MFA_SECRET,
+        )
+        logger.info("Monarch Money login successful for get_account_type_options.")
+    except RequireMFAException:
+        logger.error("Monarch Money login failed: MFA required.")
+        return {"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}
+    except Exception as e:
+        logger.error(f"Monarch Money login failed: {e}")
+        return {"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}
+
+    # --- Fetch Account Type Options ---
+    logger.info(f"Fetching Monarch Money account type options...")
+    try:
+        options_data = await mm_client.get_account_type_options()
+        # Assuming the library returns the dictionary directly
+        logger.info(f"Successfully fetched account type options.")
+        return options_data
+    except Exception as e:
+        logger.error(f"Error fetching Monarch account type options: {e}")
+        return {"error": f"An error occurred while fetching account type options: {e}"}
 
 # Add more tools here later...
 # e.g.
