@@ -477,6 +477,58 @@ async def get_budgets(start_date: str | None = None, end_date: str | None = None
         logger.error(f"Error fetching Monarch budgets: {e}", exc_info=True)
         return {"error": f"An error occurred while fetching budgets: {e}"}
 
+@mcp.tool()
+async def get_subscription_details() -> dict:
+    """
+    Retrieves subscription details for the Monarch Money account.
+    Corresponds to the get_subscription_details method in the hammem/monarchmoney library.
+    Returns:
+        A dictionary containing subscription details or an error dictionary.
+    """
+    # --- Monarch Money Client & Login ---
+    if not MONARCH_EMAIL or not MONARCH_PASSWORD:
+        logger.error("Cannot proceed: Email or password not configured in .env.")
+        return {"error": "Monarch Money email or password not configured on the server."}
+
+    mm_client = MonarchMoney()
+    logger.info(f"Attempting to log in to Monarch Money for get_subscription_details...")
+    # Add logging to verify loaded credentials
+    logger.info(f"Using Email: {MONARCH_EMAIL}")
+    logger.info(f"Password loaded: {'Yes' if MONARCH_PASSWORD else 'No'}")
+    logger.info(f"MFA Secret loaded: {'Yes' if MONARCH_MFA_SECRET else 'No'}")
+    try:
+        await mm_client.login(
+            email=MONARCH_EMAIL,
+            password=MONARCH_PASSWORD,
+            mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
+        )
+        logger.info("Monarch Money login successful for get_subscription_details.")
+    except RequireMFAException:
+        logger.error("Monarch Money login failed: MFA required.")
+        return {"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}
+    except Exception as e:
+        logger.error(f"Monarch Money login failed: {e}")
+        return {"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}
+
+    # --- Fetch Subscription Details ---
+    logger.info(f"Fetching Monarch Money subscription details...")
+    try:
+        # Call the library function
+        subscription_data = await mm_client.get_subscription_details()
+        logger.info(f"Successfully fetched subscription details. Type: {type(subscription_data)}")
+        # The library likely returns a dict like {'subscription': {...}}
+        # Extract the inner 'subscription' dict or return the whole thing if preferred
+        subscription_info = subscription_data.get('subscription', {})
+        if not subscription_info and subscription_data: # Handle case where outer key might be missing but data exists
+             subscription_info = subscription_data
+        logger.info(f"Returning subscription info: {subscription_info}")
+        return subscription_info
+    except Exception as e:
+        logger.error(f"Error fetching Monarch subscription details: {e}", exc_info=True)
+        return {"error": f"An error occurred while fetching subscription details: {e}"}
+
 # Add more tools here later...
 # e.g.
 # @mcp.tool()
