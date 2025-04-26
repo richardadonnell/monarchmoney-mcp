@@ -478,56 +478,66 @@ async def get_budgets(start_date: str | None = None, end_date: str | None = None
         return {"error": f"An error occurred while fetching budgets: {e}"}
 
 @mcp.tool()
-async def get_subscription_details() -> dict:
+async def get_recurring_transactions(start_date: str | None = None, end_date: str | None = None) -> list[dict]:
     """
-    Retrieves subscription details for the Monarch Money account.
-    Corresponds to the get_subscription_details method in the hammem/monarchmoney library.
+    Fetches upcoming recurring transactions from Monarch Money for a given period.
+    Defaults to the current month if no dates are provided.
+    Args:
+        start_date: Optional. The earliest date to get transactions from, in "YYYY-MM-DD" format.
+        end_date: Optional. The latest date to get transactions from, in "YYYY-MM-DD" format.
     Returns:
-        A dictionary containing subscription details or an error dictionary.
+        A list of recurring transaction item dictionaries or an error dictionary.
     """
     # --- Monarch Money Client & Login ---
     if not MONARCH_EMAIL or not MONARCH_PASSWORD:
         logger.error("Cannot proceed: Email or password not configured in .env.")
-        return {"error": "Monarch Money email or password not configured on the server."}
+        return [{"error": "Monarch Money email or password not configured on the server."}]
+
+    # --- Date Handling (matching reference.py logic) ---
+    if bool(start_date) != bool(end_date):
+        logger.error("Both start_date and end_date must be provided, or neither.")
+        return [{"error": "Invalid date parameters: Provide both start_date and end_date, or neither."}]
+
+    if not start_date: # If start_date is None, end_date must also be None
+        today = datetime.today()
+        # Get the first day of the current month
+        start_date = today.replace(day=1).strftime("%Y-%m-%d")
+        # Get the last day of the current month
+        _, last_day = calendar.monthrange(today.year, today.month)
+        end_date = today.replace(day=last_day).strftime("%Y-%m-%d")
+        logger.info(f"No dates provided, defaulting to current month: start_date={start_date}, end_date={end_date}")
 
     mm_client = MonarchMoney()
-    logger.info(f"Attempting to log in to Monarch Money for get_subscription_details...")
-    # Add logging to verify loaded credentials
-    logger.info(f"Using Email: {MONARCH_EMAIL}")
-    logger.info(f"Password loaded: {'Yes' if MONARCH_PASSWORD else 'No'}")
-    logger.info(f"MFA Secret loaded: {'Yes' if MONARCH_MFA_SECRET else 'No'}")
+    logger.info(f"Attempting to log in to Monarch Money for get_recurring_transactions...")
     try:
         await mm_client.login(
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET,
-            save_session=False, # Explicitly disable saving session
-            use_saved_session=False # Explicitly disable using saved session
+            save_session=False,
+            use_saved_session=False
         )
-        logger.info("Monarch Money login successful for get_subscription_details.")
+        logger.info("Monarch Money login successful for get_recurring_transactions.")
     except RequireMFAException:
         logger.error("Monarch Money login failed: MFA required.")
-        return {"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}
+        return [{"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}]
     except Exception as e:
         logger.error(f"Monarch Money login failed: {e}")
-        return {"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}
+        return [{"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}]
 
-    # --- Fetch Subscription Details ---
-    logger.info(f"Fetching Monarch Money subscription details...")
+    # --- Fetch Recurring Transactions ---
+    logger.info(f"Fetching Monarch Money recurring transactions (start={start_date}, end={end_date})...")
     try:
-        # Call the library function
-        subscription_data = await mm_client.get_subscription_details()
-        logger.info(f"Successfully fetched subscription details. Type: {type(subscription_data)}")
-        # The library likely returns a dict like {'subscription': {...}}
-        # Extract the inner 'subscription' dict or return the whole thing if preferred
-        subscription_info = subscription_data.get('subscription', {})
-        if not subscription_info and subscription_data: # Handle case where outer key might be missing but data exists
-             subscription_info = subscription_data
-        logger.info(f"Returning subscription info: {subscription_info}")
-        return subscription_info
+        # Call the library function with the specified or defaulted dates
+        result_data = await mm_client.get_recurring_transactions(start_date=start_date, end_date=end_date)
+        logger.info(f"Successfully fetched recurring transactions data. Type: {type(result_data)}")
+        # Extract the list of transactions from the response, likely under 'recurringTransactionItems' key
+        recurring_transactions_list = result_data.get('recurringTransactionItems', [])
+        logger.info(f"Successfully extracted {len(recurring_transactions_list)} recurring transactions.")
+        return recurring_transactions_list
     except Exception as e:
-        logger.error(f"Error fetching Monarch subscription details: {e}", exc_info=True)
-        return {"error": f"An error occurred while fetching subscription details: {e}"}
+        logger.error(f"Error fetching Monarch recurring transactions: {e}", exc_info=True)
+        return [{"error": f"An error occurred while fetching recurring transactions: {e}"}]
 
 # Add more tools here later...
 # e.g.
