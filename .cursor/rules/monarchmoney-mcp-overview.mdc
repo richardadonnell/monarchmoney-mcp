@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Monarch Money MCP Tool Overview
+
+This project implements an MCP (Multi-Cog Procotol) server that exposes tools for interacting with the Monarch Money API.
+
+## Key Files
+
+*   **Entry Point**: The main application logic and tool definitions are in `[main.py](mdc:main.py)`. The server is started using `uvicorn` within this file.
+*   **Configuration**: Environment variables (like Monarch Money credentials) are loaded from the `[.env](mdc:.env)` file using `python-dotenv`. See `[.env.example](mdc:.env.example)` for required variables.
+*   **Dependencies**: Project dependencies are managed by `uv` and listed in `[pyproject.toml](mdc:pyproject.toml)` and locked in `[uv.lock](mdc:uv.lock)`. Key libraries include `mcp`, `monarchmoney`, `uvicorn`, and `python-dotenv`.
+
+## Functionality
+
+The server uses `mcp.server.fastmcp.FastMCP` to define tools (e.g., `get_accounts`, `get_transactions`). Each tool function typically:
+1.  Logs into Monarch Money using credentials from the environment.
+2.  Calls the corresponding function from the `monarchmoney` library.
+3.  Returns the data fetched from the Monarch Money API or an error dictionary.
+
+
+When making changes to the `main.py` file, please reference the `reference.py` file for the correct syntax.
+
+Monarch Money Python Library: https://github.com/hammem/monarchmoney
+

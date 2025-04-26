@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 !!! ALWAYS CHECK THE DOCS *BEFORE* MAKING ANY CHANGES TO THE CODE !!!
 
