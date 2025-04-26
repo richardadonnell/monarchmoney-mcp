@@ -629,6 +629,77 @@ async def get_transaction_category_groups() -> list[dict]:
         logger.error(f"Error fetching Monarch transaction category groups: {e}", exc_info=True)
         return [{"error": f"An error occurred while fetching transaction category groups: {e}"}]
 
+@mcp.tool()
+async def get_cashflow(
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 100, # DEFAULT_RECORD_LIMIT is 100 in reference.py
+) -> dict:
+    """
+    Gets cash flow data (income, expenses, savings by category/group/merchant) from Monarch Money.
+    Defaults to the current month if no date range is provided.
+    Corresponds to the get_cashflow method in the hammem/monarchmoney library.
+
+    Args:
+        limit: Optional. Maximum number of records for certain sub-queries (like merchants). Defaults to 100.
+        start_date: Optional. The earliest date to get cash flow data from, in "YYYY-MM-DD" format. Must be provided with end_date.
+        end_date: Optional. The latest date to get cash flow data from, in "YYYY-MM-DD" format. Must be provided with start_date.
+    Returns:
+        A dictionary containing cash flow data or an error dictionary.
+    """
+    # --- Monarch Money Client & Login ---
+    if not MONARCH_EMAIL or not MONARCH_PASSWORD:
+        logger.error("Cannot proceed: Email or password not configured in .env.")
+        return {"error": "Monarch Money email or password not configured on the server."}
+
+    # --- Date Handling (matching reference.py logic) ---
+    if bool(start_date) != bool(end_date):
+        logger.error("Both start_date and end_date must be provided, or neither.")
+        return {"error": "Invalid date parameters: Provide both start_date and end_date, or neither."}
+
+    if not start_date: # If start_date is None, end_date must also be None
+        today = datetime.today()
+        # Get the first day of the current month
+        start_date = today.replace(day=1).strftime("%Y-%m-%d")
+        # Get the last day of the current month
+        _, last_day = calendar.monthrange(today.year, today.month)
+        end_date = today.replace(day=last_day).strftime("%Y-%m-%d")
+        logger.info(f"No dates provided, defaulting to current month: start_date={start_date}, end_date={end_date}")
+
+    mm_client = MonarchMoney()
+    logger.info(f"Attempting to log in to Monarch Money for get_cashflow...")
+    try:
+        await mm_client.login(
+            email=MONARCH_EMAIL,
+            password=MONARCH_PASSWORD,
+            mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False,
+            use_saved_session=False
+        )
+        logger.info("Monarch Money login successful for get_cashflow.")
+    except RequireMFAException:
+        logger.error("Monarch Money login failed: MFA required.")
+        return {"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}
+    except Exception as e:
+        logger.error(f"Monarch Money login failed: {e}")
+        return {"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}
+
+    # --- Fetch Cash Flow Data ---
+    logger.info(f"Fetching Monarch Money cash flow data (limit={limit}, start={start_date}, end={end_date})...")
+    try:
+        # Call the library function with the specified or defaulted dates and limit
+        cashflow_data = await mm_client.get_cashflow(
+            limit=limit,
+            start_date=start_date,
+            end_date=end_date
+        )
+        logger.info(f"Successfully fetched cash flow data. Type: {type(cashflow_data)}")
+        # logger.info(f"Cash flow data sample: {str(cashflow_data)[:500]}") # Log snippet if needed
+        return cashflow_data
+    except Exception as e:
+        logger.error(f"Error fetching Monarch cash flow data: {e}", exc_info=True)
+        return {"error": f"An error occurred while fetching cash flow data: {e}"}
+
 # Add more tools here later...
 # e.g.
 # @mcp.tool()
