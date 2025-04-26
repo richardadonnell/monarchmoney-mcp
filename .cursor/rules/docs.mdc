@@ -3,7 +3,8 @@ description:
 globs: 
 alwaysApply: true
 ---
-ALWAYS check the original repo for reference BEFORE making any code changes!!
+!!! ALWAYS CHECK THE DOCS *BEFORE* MAKING ANY CHANGES TO THE CODE !!!
+
 
 
 https://github.com/hammem/monarchmoney
