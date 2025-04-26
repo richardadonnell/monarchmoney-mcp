@@ -6,24 +6,24 @@ A server application built with FastMCP to expose tools for interacting with a M
 
 This server provides the following tools that can be called via the MCP protocol:
 
-[X] `get_accounts` — gets all the accounts linked to Monarch Money
-[X] `get_account_holdings` — gets all of the securities in a brokerage or similar type of account
-[X] `get_account_type_options` — all account types and their subtypes available in Monarch Money
-[X] `get_account_history` — gets all daily account history for the specified account
-[X] `get_institutions` — gets institutions linked to Monarch Money
-[X] `get_budgets` — all the budgets and the corresponding actual amounts
-[ ] `get_subscription_details` — gets the Monarch Money account's status (e.g., paid or trial)
-[X] `get_recurring_transactions` — gets the future recurring transactions, including merchant and account details
-[X] `get_transactions_summary` — gets the transaction summary data from the transactions page
-[X] `get_transactions` — gets transaction data, defaults to returning the last 100 transactions; can also be searched by date range
-[X] `get_transaction_categories` — gets all of the categories configured in the account
-[X] `get_transaction_category_groups` — all category groups configured in the account
-[ ] `get_transaction_details` — gets detailed transaction data for a single transaction
-[ ] `get_transaction_splits` — gets transaction splits for a single transaction
-[ ] `get_transaction_tags` — gets all of the tags configured in the account
-[X] `get_cashflow` — gets cashflow data (by category, category group, merchant, and a summary)
-[X] `get_cashflow_summary` — gets cashflow summary (income, expense, savings, savings rate)
-[ ] `is_accounts_refresh_complete` — gets the status of a running account refresh
+- [x] `get_accounts` — gets all the accounts linked to Monarch Money
+- [x] `get_account_holdings` — gets all of the securities in a brokerage or similar type of account
+- [x] `get_account_type_options` — all account types and their subtypes available in Monarch Money
+- [x] `get_account_history` — gets all daily account history for the specified account
+- [x] `get_institutions` — gets institutions linked to Monarch Money
+- [x] `get_budgets` — all the budgets and the corresponding actual amounts
+- [ ] `get_subscription_details` — gets the Monarch Money account's status (e.g., paid or trial)
+- [x] `get_recurring_transactions` — gets the future recurring transactions, including merchant and account details
+- [x] `get_transactions_summary` — gets the transaction summary data from the transactions page
+- [x] `get_transactions` — gets transaction data, defaults to returning the last 100 transactions; can also be searched by date range
+- [x] `get_transaction_categories` — gets all of the categories configured in the account
+- [x] `get_transaction_category_groups` — all category groups configured in the account
+- [ ] `get_transaction_details` — gets detailed transaction data for a single transaction
+- [ ] `get_transaction_splits` — gets transaction splits for a single transaction
+- [ ] `get_transaction_tags` — gets all of the tags configured in the account
+- [x] `get_cashflow` — gets cashflow data (by category, category group, merchant, and a summary)
+- [x] `get_cashflow_summary` — gets cashflow summary (income, expense, savings, savings rate)
+- [ ] `is_accounts_refresh_complete` — gets the status of a running account refresh
 
 ## Setup
 
