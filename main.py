@@ -210,15 +210,25 @@ async def get_account_history(account_id: int) -> list[dict]:
     logger.info(f"Fetching Monarch Money account history for account ID: {account_id}...")
     try:
         # Pass the account_id to the library function
-        history_data = await mm_client.get_account_history(account_id=account_id)
-        # Assuming the library returns a list of history entries directly or within a known structure
-        # Example: history_data might be {'accountHistory': [...]} - adjust .get() key if necessary
-        history_list = history_data.get('accountHistory', []) # Adjust key if needed
+        # The library's get_account_history function already processes the response
+        # and returns the list of history dictionaries directly.
+        history_list = await mm_client.get_account_history(account_id=account_id)
+
+        # Check if the result is an error (list containing a single dict with 'error' key)
+        if isinstance(history_list, list) and len(history_list) == 1 and 'error' in history_list[0]:
+             logger.error(f"Library call returned an error for account {account_id}: {history_list[0]['error']}")
+             # Propagate the error structure
+             return history_list
+        elif not isinstance(history_list, list):
+            # Handle unexpected return types (though the library should return list or raise)
+            logger.error(f"Unexpected return type from get_account_history for account {account_id}: {type(history_list)}")
+            return [{"error": f"Unexpected data structure received for account history: {type(history_list).__name__}"}]
+
         logger.info(f"Successfully fetched {len(history_list)} history entries for account {account_id}.")
         return history_list
     except Exception as e:
-        logger.error(f"Error fetching Monarch account history for account {account_id}: {e}")
-        return [{"error": f"An error occurred while fetching account history: {e}"}]
+        logger.error(f"Error fetching Monarch account history for account {account_id}: {e}", exc_info=True) # Added exc_info
+        return [{"error": f"An error occurred while fetching account history: {type(e).__name__} - {e}"}]
 
 @mcp.tool()
 async def get_account_holdings(account_id: int) -> list[dict]:
