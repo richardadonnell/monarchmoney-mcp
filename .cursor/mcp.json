@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "MonarchMoneyTool": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp[cli]",
+        "mcp",
+        "run",
+        "D:\\Dropbox\\Personal\\Projects\\monarchmoney-mcp\\main.py"
+      ]
+    }
+  }
+}
