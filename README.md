@@ -6,16 +6,19 @@ A server application built with FastMCP to expose tools for interacting with a M
 
 This server provides the following tools that can be called via the MCP protocol:
 
-- `get_accounts`: Retrieves a list of all linked Monarch Money accounts.
-- `get_transactions`: Retrieves transactions, optionally filtered by date range and limit.
-- `get_cashflow_summary`: Retrieves the cash flow summary (income, expenses, savings rate).
-- `get_account_history`: Retrieves the daily balance history for a specific account.
-- `get_account_holdings`: Retrieves all securities (holdings) in an investment account.
-- `get_transactions_summary`: Retrieves the transaction summary data.
-- `get_account_type_options`: Retrieves available account types and subtypes.
-- `get_institutions`: Retrieves linked institutions.
-- `get_budgets`: Retrieves budgets and actual spending for a given period.
-- `get_subscription_details`: Retrieves subscription details for the Monarch Money account.
+- `get_accounts`: Retrieves a list of all accounts linked to Monarch Money.
+- `get_account_holdings`: Retrieves all securities (holdings) in a brokerage or similar type of account.
+- `get_account_type_options`: Retrieves all account types and their subtypes available in Monarch Money.
+- `get_account_history`: Retrieves the daily account history for a specified account.
+- `get_institutions`: Retrieves institutions linked to Monarch Money.
+- `get_budgets`: Retrieves all budgets and corresponding actual amounts.
+- `get_recurring_transactions`: Retrieves future recurring transactions, including merchant and account details.
+- `get_transactions_summary`: Retrieves the transaction summary data from the transactions page.
+- `get_transactions`: Retrieves transaction data, defaults to the last 100 transactions, and can be filtered by date range.
+- `get_transaction_categories`: Retrieves all categories configured in the account.
+- `get_transaction_category_groups`: Retrieves all category groups configured in the account.
+- `get_cashflow`: Retrieves cashflow data (by category, category group, merchant, and summary).
+- `get_cashflow_summary`: Retrieves the cash flow summary (income, expense, savings rate).
 
 _(More tools can be added by extending `main.py`)_
 
