@@ -1,6 +1,8 @@
 import asyncio
+import calendar
 import logging
 import os
+from datetime import datetime, timedelta
 
 import uvicorn
 from dotenv import load_dotenv
@@ -401,6 +403,79 @@ async def get_institutions() -> list[dict]:
     except Exception as e:
         logger.error(f"Error fetching/parsing Monarch institutions: {e}", exc_info=True) # Add exc_info for better debugging
         return [{"error": f"An error occurred while fetching institutions: {e}"}]
+
+@mcp.tool()
+async def get_budgets(start_date: str | None = None, end_date: str | None = None) -> dict:
+    """
+    Retrieves budgets and corresponding actual amounts from Monarch Money for a given period.
+    Defaults to the period covering the previous month, current month, and next month if no dates are provided.
+    Corresponds to the get_budgets method in the hammem/monarchmoney library.
+    Args:
+        start_date: Optional. The earliest date to get budget data, in "YYYY-MM-DD" format.
+        end_date: Optional. The latest date to get budget data, in "YYYY-MM-DD" format.
+    Returns:
+        A dictionary containing budget data or an error dictionary.
+    """
+    # --- Monarch Money Client & Login ---
+    if not MONARCH_EMAIL or not MONARCH_PASSWORD:
+        logger.error("Cannot proceed: Email or password not configured in .env.")
+        return {"error": "Monarch Money email or password not configured on the server."}
+
+    # --- Date Handling (matching reference.py logic) ---
+    if bool(start_date) != bool(end_date):
+        logger.error("Both start_date and end_date must be provided, or neither.")
+        return {"error": "Invalid date parameters: Provide both start_date and end_date, or neither."}
+
+    if not start_date: # If start_date is None, end_date must also be None
+        today = datetime.today()
+        # Get the first day of last month
+        first_day_current_month = today.replace(day=1)
+        last_day_last_month = first_day_current_month - timedelta(days=1)
+        start_date = last_day_last_month.replace(day=1).strftime("%Y-%m-%d")
+
+        # Get the last day of next month
+        # Move to the first day of the current month, add 2 months, then subtract 1 day
+        # This handles year rollovers correctly
+        first_day_next_next_month = (first_day_current_month.replace(year=today.year + (today.month + 1) // 13, 
+                                                                    month=(today.month + 1) % 12 + 1))
+        end_date = (first_day_next_next_month - timedelta(days=1)).strftime("%Y-%m-%d")
+        logger.info(f"No dates provided, defaulting to start_date={start_date}, end_date={end_date}")
+
+
+    mm_client = MonarchMoney()
+    logger.info(f"Attempting to log in to Monarch Money for get_budgets...")
+    # Add logging to verify loaded credentials
+    logger.info(f"Using Email: {MONARCH_EMAIL}")
+    logger.info(f"Password loaded: {'Yes' if MONARCH_PASSWORD else 'No'}")
+    logger.info(f"MFA Secret loaded: {'Yes' if MONARCH_MFA_SECRET else 'No'}")
+    try:
+        await mm_client.login(
+            email=MONARCH_EMAIL,
+            password=MONARCH_PASSWORD,
+            mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
+        )
+        logger.info("Monarch Money login successful for get_budgets.")
+    except RequireMFAException:
+        logger.error("Monarch Money login failed: MFA required.")
+        return {"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}
+    except Exception as e:
+        logger.error(f"Monarch Money login failed: {e}")
+        return {"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}
+
+    # --- Fetch Budgets ---
+    logger.info(f"Fetching Monarch Money budgets (start={start_date}, end={end_date})...")
+    try:
+        # Call the library function with potentially defaulted dates
+        # Do NOT pass useLegacyGoals or useV2Goals based on reference.py
+        budgets_data = await mm_client.get_budgets(start_date=start_date, end_date=end_date)
+        logger.info(f"Successfully fetched budgets data. Type: {type(budgets_data)}")
+        # logger.info(f"Budgets data sample: {str(budgets_data)[:500]}") # Log snippet if needed
+        return budgets_data
+    except Exception as e:
+        logger.error(f"Error fetching Monarch budgets: {e}", exc_info=True)
+        return {"error": f"An error occurred while fetching budgets: {e}"}
 
 # Add more tools here later...
 # e.g.
