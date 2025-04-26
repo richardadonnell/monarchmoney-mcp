@@ -539,6 +539,51 @@ async def get_recurring_transactions(start_date: str | None = None, end_date: st
         logger.error(f"Error fetching Monarch recurring transactions: {e}", exc_info=True)
         return [{"error": f"An error occurred while fetching recurring transactions: {e}"}]
 
+@mcp.tool()
+async def get_transaction_categories() -> list[dict]:
+    """
+    Retrieves all transaction categories configured in the Monarch Money account.
+    Corresponds to the get_transaction_categories method in the hammem/monarchmoney library.
+    Returns:
+        A list of category dictionaries or an error dictionary.
+    """
+    # --- Monarch Money Client & Login ---
+    if not MONARCH_EMAIL or not MONARCH_PASSWORD:
+        logger.error("Cannot proceed: Email or password not configured in .env.")
+        return [{"error": "Monarch Money email or password not configured on the server."}]
+
+    mm_client = MonarchMoney()
+    logger.info(f"Attempting to log in to Monarch Money for get_transaction_categories...")
+    try:
+        await mm_client.login(
+            email=MONARCH_EMAIL,
+            password=MONARCH_PASSWORD,
+            mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False,
+            use_saved_session=False
+        )
+        logger.info("Monarch Money login successful for get_transaction_categories.")
+    except RequireMFAException:
+        logger.error("Monarch Money login failed: MFA required.")
+        return [{"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}]
+    except Exception as e:
+        logger.error(f"Monarch Money login failed: {e}")
+        return [{"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}]
+
+    # --- Fetch Transaction Categories ---
+    logger.info(f"Fetching Monarch Money transaction categories...")
+    try:
+        # Call the library function
+        result_data = await mm_client.get_transaction_categories()
+        logger.info(f"Successfully fetched transaction categories data. Type: {type(result_data)}")
+        # Extract the list of categories from the response, likely under 'categories' key based on reference.py
+        categories_list = result_data.get('categories', [])
+        logger.info(f"Successfully extracted {len(categories_list)} transaction categories.")
+        return categories_list
+    except Exception as e:
+        logger.error(f"Error fetching Monarch transaction categories: {e}", exc_info=True)
+        return [{"error": f"An error occurred while fetching transaction categories: {e}"}]
+
 # Add more tools here later...
 # e.g.
 # @mcp.tool()
