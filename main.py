@@ -42,6 +42,8 @@ async def get_accounts() -> list[dict]:
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET, # Will be None if not set, library handles it
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
         )
         logger.info("Monarch Money login successful.")
     except RequireMFAException:
@@ -92,6 +94,8 @@ async def get_transactions(start_date: str | None = None, end_date: str | None =
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
         )
         logger.info("Monarch Money login successful for get_transactions.")
     except RequireMFAException:
@@ -145,6 +149,8 @@ async def get_cashflow_summary() -> dict:
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
         )
         logger.info("Monarch Money login successful for get_cashflow_summary.")
     except RequireMFAException:
@@ -187,6 +193,8 @@ async def get_account_history(account_id: int) -> list[dict]:
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
         )
         logger.info("Monarch Money login successful for get_account_history.")
     except RequireMFAException:
@@ -231,6 +239,8 @@ async def get_account_holdings(account_id: int) -> list[dict]:
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
         )
         logger.info("Monarch Money login successful for get_account_holdings.")
     except RequireMFAException:
@@ -272,6 +282,8 @@ async def get_transactions_summary() -> dict:
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
         )
         logger.info("Monarch Money login successful for get_transactions_summary.")
     except RequireMFAException:
@@ -312,6 +324,8 @@ async def get_account_type_options() -> dict:
             email=MONARCH_EMAIL,
             password=MONARCH_PASSWORD,
             mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
         )
         logger.info("Monarch Money login successful for get_account_type_options.")
     except RequireMFAException:
@@ -331,6 +345,62 @@ async def get_account_type_options() -> dict:
     except Exception as e:
         logger.error(f"Error fetching Monarch account type options: {e}")
         return {"error": f"An error occurred while fetching account type options: {e}"}
+
+@mcp.tool()
+async def get_institutions() -> list[dict]:
+    """
+    Retrieves institutions linked to Monarch Money.
+    Corresponds to the get_institutions method in the hammem/monarchmoney library.
+    Returns:
+        A list of institution dictionaries or an error dictionary.
+    """
+    # --- Monarch Money Client & Login ---
+    if not MONARCH_EMAIL or not MONARCH_PASSWORD:
+        logger.error("Cannot proceed: Email or password not configured in .env.")
+        return [{"error": "Monarch Money email or password not configured on the server."}]
+
+    mm_client = MonarchMoney()
+    logger.info(f"Attempting to log in to Monarch Money for get_institutions...")
+    # Add logging to verify loaded credentials
+    logger.info(f"Using Email: {MONARCH_EMAIL}")
+    logger.info(f"Password loaded: {'Yes' if MONARCH_PASSWORD else 'No'}")
+    logger.info(f"MFA Secret loaded: {'Yes' if MONARCH_MFA_SECRET else 'No'}")
+    try:
+        await mm_client.login(
+            email=MONARCH_EMAIL,
+            password=MONARCH_PASSWORD,
+            mfa_secret_key=MONARCH_MFA_SECRET,
+            save_session=False, # Explicitly disable saving session
+            use_saved_session=False # Explicitly disable using saved session
+        )
+        logger.info("Monarch Money login successful for get_institutions.")
+    except RequireMFAException:
+        logger.error("Monarch Money login failed: MFA required.")
+        return [{"error": "Failed to log in to Monarch Money: MFA Required. Check server logs and .env configuration."}]
+    except Exception as e:
+        logger.error(f"Monarch Money login failed: {e}")
+        return [{"error": f"Failed to log in to Monarch Money: {e}. Check server logs."}]
+
+    # --- Fetch Institutions ---
+    logger.info(f"Fetching Monarch Money institutions...")
+    try:
+        # The library function likely returns the raw GraphQL response
+        response_data = await mm_client.get_institutions()
+        # Extract institutions from the 'credentials' list in the response data
+        credentials = response_data.get('credentials', [])
+        institutions_set = set() # Use a set to store unique institution IDs
+        institutions_list = []
+        for cred in credentials:
+            inst = cred.get('institution')
+            if inst and inst.get('id') not in institutions_set:
+                institutions_set.add(inst.get('id'))
+                institutions_list.append(inst)
+
+        logger.info(f"Successfully extracted {len(institutions_list)} unique institutions.")
+        return institutions_list
+    except Exception as e:
+        logger.error(f"Error fetching/parsing Monarch institutions: {e}", exc_info=True) # Add exc_info for better debugging
+        return [{"error": f"An error occurred while fetching institutions: {e}"}]
 
 # Add more tools here later...
 # e.g.
